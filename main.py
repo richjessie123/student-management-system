@@ -1,7 +1,8 @@
 from PyQt6.QtWidgets import QApplication, QWidget, QLabel, QGridLayout, \
-    QLineEdit, QPushButton, QMainWindow, QTableWidget
+    QLineEdit, QPushButton, QMainWindow, QTableWidget, QTableWidgetItem
 from PyQt6.QtGui import QAction
 import sys
+import sqlite3
 
 
 class MainWindow(QMainWindow):
@@ -19,14 +20,25 @@ class MainWindow(QMainWindow):
         help_menu_item.addAction(about_action)
         about_action.setMenuRole(QAction.MenuRole.NoRole)
 
-        table = QTableWidget()
-        table.setColumnCount(4)
-        table.setHorizontalHeaderLabels(["Id", "Name", "Course", "Mobile"])
-        self.setCentralWidget(table)
+        self.table = QTableWidget()
+        self.table.setColumnCount(4)
+        self.table.setHorizontalHeaderLabels(["Id", "Name", "Course", "Mobile"])
+        self.table.verticalHeader().setVisible(False)
+        self.setCentralWidget(self.table)
 
+    def load_data(self):
+        connection = sqlite3.connect("database.db")
+        data = connection.execute("SELECT * FROM students")
+        self.table.setRowCount(0)
+        for row_number, row_data in enumerate(data):
+            self.table.insertRow(row_number)
+            for column_number, column_data in enumerate(row_data):
+                self.table.setItem(row_number, column_number, QTableWidgetItem(str(column_data)))
+        connection.close()
 
 
 app = QApplication(sys.argv)
 student_management_system = MainWindow()
 student_management_system.show()
+student_management_system.load_data()
 sys.exit(app.exec())
