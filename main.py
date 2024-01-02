@@ -1,7 +1,7 @@
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QApplication, QWidget, QLabel, QGridLayout, \
     QLineEdit, QPushButton, QMainWindow, QTableWidget, QTableWidgetItem, QDialog, \
-    QVBoxLayout, QComboBox, QToolBar
+    QVBoxLayout, QComboBox, QToolBar, QStatusBar
 from PyQt6.QtGui import QAction, QIcon
 import sys
 import sqlite3
@@ -20,7 +20,7 @@ class MainWindow(QMainWindow):
         edit_menu_item = self.menuBar().addMenu("&Edit")
 
         # Make the File Menu Item Actionable by Connecting the Add Student Option to the Insert Method Below
-        add_student_action = QAction(QIcon("icons/add.png"),"Add Student", self)
+        add_student_action = QAction(QIcon("icons/add.png"), "Add Student", self)
         add_student_action.triggered.connect(self.insert)
         file_menu_item.addAction(add_student_action)
 
@@ -30,7 +30,7 @@ class MainWindow(QMainWindow):
         about_action.setMenuRole(QAction.MenuRole.NoRole)
 
         # Make the Edit Menu Item Actionable by Connecting the Search Option to the Search Method Below
-        search_action = QAction(QIcon("icons/search.png"),"Search", self)
+        search_action = QAction(QIcon("icons/search.png"), "Search", self)
         search_action.triggered.connect(self.search)
         edit_menu_item.addAction(search_action)
 
@@ -45,8 +45,36 @@ class MainWindow(QMainWindow):
         toolbar = QToolBar()
         toolbar.setMovable(True)
         self.addToolBar(toolbar)
+
+        # Add Action to Toolbar items
         toolbar.addAction(add_student_action)
         toolbar.addAction(search_action)
+
+        # Create Status bar and add status bar elements
+        self.statusbar = QStatusBar()
+        self.setStatusBar(self.statusbar)
+
+        # Detect a cell click
+        self.table.cellClicked.connect(self.cell_clicked)
+
+    def cell_clicked(self):
+        """This method loads the status bar widgets when a cell in the table is clocked"""
+        edit_button = QPushButton("Edit Record")
+        delete_button = QPushButton("Delete Record")
+
+        # Connects the Edit and delete button when clicked to their methods below
+        edit_button.clicked.connect(self.edit)
+        delete_button.clicked.connect(self.delete)
+
+        # Remove Edit and Delete Button
+        children = self.findChildren(QPushButton)
+        if children:
+            for child in children:
+                self.statusbar.removeWidget(child)
+
+        self.statusbar.addWidget(edit_button)
+        self.statusbar.addWidget(delete_button)
+
 
     def load_data(self):
         """This method loads the SQL database that contains the student data and connects
@@ -72,9 +100,31 @@ class MainWindow(QMainWindow):
         dialog = SearchDialog()
         dialog.exec()
 
+    def edit(self):
+        """This method initiates the Edit Dialog class when the Edit Record Button is
+        selected"""
+        dialog = EditDialog()
+        dialog.exec()
+
+    def delete(self):
+        """This method initiates the Delete Dialog class when the Delete Record Button is
+        selected"""
+        dialog = DeleteDialog()
+        dialog.exec()
+
+
+class EditDialog(QDialog):
+    """This class opens up a Dialog Box when the Edit Record Button is clicked"""
+    pass
+
+
+class DeleteDialog(QDialog):
+    """This class opens up a Dialog Box when the Delete Record Button is clicked"""
+    pass
+
 
 class InsertDialog(QDialog):
-    """This class opens a Dialog Box when the Add Student Menu Options is clicked"""
+    """This class opens a Dialog Box when the Add Student Menu Option is clicked"""
 
     def __init__(self):
         super().__init__()
@@ -151,15 +201,13 @@ class SearchDialog(QDialog):
         name = self.student_name.text()
         connection = sqlite3.connect("database.db")
         cursor = connection.cursor()
-        results = cursor.execute("SELECT * FROM students WHERE name = ?", (name, ))
+        results = cursor.execute("SELECT * FROM students WHERE name = ?", (name,))
         items = main_window.table.findItems(name, Qt.MatchFlag.MatchFixedString)
         for item in items:
             main_window.table.item(item.row(), item.column()).setSelected(True)
 
         cursor.close()
         connection.close()
-
-
 
 
 # Run program
