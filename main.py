@@ -1,7 +1,7 @@
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QApplication, QWidget, QLabel, QGridLayout, \
     QLineEdit, QPushButton, QMainWindow, QTableWidget, QTableWidgetItem, QDialog, \
-    QVBoxLayout, QComboBox, QToolBar, QStatusBar
+    QVBoxLayout, QComboBox, QToolBar, QStatusBar, QMessageBox
 from PyQt6.QtGui import QAction, QIcon
 import sys
 import sqlite3
@@ -168,11 +168,47 @@ class EditDialog(QDialog):
         main_window.load_data()
 
 
+
 class DeleteDialog(QDialog):
     """This class opens up a Dialog Box when the Delete Record Button is clicked"""
-    pass
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Delete Student Data")
 
+        layout = QGridLayout()
+        confirmation_message = QLabel("Are you sure you want to delete this student?")
+        yes_button = QPushButton("Yes")
+        yes_button.clicked.connect(self.delete)
+        no_button = QPushButton("No")
+        no_button.clicked.connect(self.no_delete)
 
+        layout.addWidget(confirmation_message, 0, 0, 1, 2)
+        layout.addWidget(yes_button, 1, 0)
+        layout.addWidget(no_button, 1, 1)
+        self.setLayout(layout)
+
+    def delete(self):
+        """This function deletes the selected row from the database"""
+        index = main_window.table.currentRow()
+        student_id = main_window.table.item(index, 0).text()
+
+        connection = sqlite3.connect("database.db")
+        cursor = connection.cursor()
+        cursor.execute("DELETE FROM students WHERE id = ?", (student_id, ))
+
+        connection.commit()
+        cursor.close()
+        connection.close()
+        main_window.load_data()
+
+        self.close()
+        delete_message = QMessageBox()
+        delete_message.setWindowTitle("Success")
+        delete_message.setText("The record was successfully deleted!")
+        delete_message.exec()
+
+    def no_delete(self):
+        self.close()
 class InsertDialog(QDialog):
     """This class opens a Dialog Box when the Add Student Menu Option is clicked"""
 
