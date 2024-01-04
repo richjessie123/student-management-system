@@ -28,6 +28,7 @@ class MainWindow(QMainWindow):
         about_action = QAction("About", self)
         help_menu_item.addAction(about_action)
         about_action.setMenuRole(QAction.MenuRole.NoRole)
+        about_action.triggered.connect(self.about)
 
         # Make the Edit Menu Item Actionable by Connecting the Search Option to the Search Method Below
         search_action = QAction(QIcon("icons/search.png"), "Search", self)
@@ -111,6 +112,21 @@ class MainWindow(QMainWindow):
         dialog = DeleteDialog()
         dialog.exec()
 
+    def about(self):
+        dialog = AboutDialog()
+        dialog.exec()
+
+
+class AboutDialog(QMessageBox):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("About")
+        content = """
+        This is an app that manages data regarding students in a class
+        """
+
+        self.setText(content)
+
 
 class EditDialog(QDialog):
     """This class opens up a Dialog Box when the Edit Record Button is clicked"""
@@ -168,9 +184,9 @@ class EditDialog(QDialog):
         main_window.load_data()
 
 
-
 class DeleteDialog(QDialog):
     """This class opens up a Dialog Box when the Delete Record Button is clicked"""
+
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Delete Student Data")
@@ -194,7 +210,7 @@ class DeleteDialog(QDialog):
 
         connection = sqlite3.connect("database.db")
         cursor = connection.cursor()
-        cursor.execute("DELETE FROM students WHERE id = ?", (student_id, ))
+        cursor.execute("DELETE FROM students WHERE id = ?", (student_id,))
 
         connection.commit()
         cursor.close()
@@ -209,6 +225,8 @@ class DeleteDialog(QDialog):
 
     def no_delete(self):
         self.close()
+
+
 class InsertDialog(QDialog):
     """This class opens a Dialog Box when the Add Student Menu Option is clicked"""
 
